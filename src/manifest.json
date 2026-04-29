@@ -1,0 +1,16 @@
+{
+	"manifest_version": 1,
+	"id": "com.github.eugenelesnov.LinkIt",
+	"app_min_version": "3.5",
+	"version": "0.0.2",
+	"name": "Link It",
+	"description": "Inline note search on '[[': with autocomplete",
+	"author": "Eugene Lesnov",
+	"homepage_url": "https://github.com/eugene-lesnov/joplin-plugin-link-it",
+	"repository_url": "https://github.com/eugene-lesnov/joplin-plugin-link-it",
+	"keywords": ["links", "note links", "autocomplete", "navigation"],
+	"categories": ["editor", "productivity"],
+	"screenshots": [],
+	"icons": {},
+	"promo_tile": {}
+}

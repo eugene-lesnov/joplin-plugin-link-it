@@ -1,0 +1,5 @@
+{
+	"extraScripts": [
+		"contentScripts/codeMirror6Plugin.ts"
+	]
+}

@@ -1,0 +1,8 @@
+.cm-tooltip-autocomplete .cm-completionDetail {
+	margin-left: 0.75em;
+	padding-left: 0.5em;
+	color: var(--joplin-color-faded, #888);
+	font-size: 0.85em;
+	font-style: normal;
+	opacity: 0.85;
+}
