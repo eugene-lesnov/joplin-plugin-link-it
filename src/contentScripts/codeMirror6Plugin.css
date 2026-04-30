@@ -1,3 +1,8 @@
+.cm-tooltip-autocomplete > ul {
+	min-width: 360px;
+	max-width: 720px;
+}
+
 .cm-tooltip-autocomplete .cm-completionDetail {
 	margin-left: 0.75em;
 	padding-left: 0.5em;
@@ -5,4 +10,7 @@
 	font-size: 0.85em;
 	font-style: normal;
 	opacity: 0.85;
+	white-space: nowrap;
+	overflow: visible;
+	text-overflow: clip;
 }
