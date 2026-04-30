@@ -60,5 +60,5 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" \
             publish/*.jpl \
             publish/*.json \
-            --title "Link It ${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
             --notes "Release ${GITHUB_REF_NAME}"
