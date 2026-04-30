@@ -1,27 +1,30 @@
 # Link It
 
-A plugin for [Joplin](https://joplinapp.org) that adds quick insertion of note links directly from the editor.
+A [Joplin](https://joplinapp.org) plugin for fast inline note linking from the editor.
 
 ## Features
 
-- Autocomplete trigger on `[[` in the CodeMirror 6 editor.
-- Note search by title prefix with folder path preview.
-- Inserts a native markdown link in the form `[Title](:/<id>)`.
-- Folder cache warm-up and invalidation on note changes and sync.
+- `[[` triggers an autocomplete with title-prefix search and notebook path preview.
+- Inserts a note link in the form `[Title](:/<id>)`.
+- Creates a new note from the autocomplete when nothing matches.
+- Localization support.
 
 ## Requirements
 
-- Joplin **3.5+** (CodeMirror 6 support).
-
-## Installation
-
-**From the plugin repository:** `Tools → Options → Plugins`, find `Link It`, install it and restart Joplin.
-
-**Manually:** build the `.jpl` file with `npm run dist` and install it via `Tools → Options → Plugins → Install from file`.
+- Joplin **3.5+** (CodeMirror 6 editor).
 
 ## Usage
 
-In the editor, type `[[` and then start typing a note title. Pick an item from the list — a ready-to-use link `[Title](:/id)` will be inserted. When the query is empty, the most recently modified notes are shown.
+Type `[[` and start typing a note title. Pick an entry from the list to insert the link. With an empty query, the most recently modified notes are shown. When no match is found, the list offers a "Create" option.
+
+## Settings
+
+- **Default notebook for new notes**: path (e.g. `Inbox` or `Projects/Active`) where notes created from the autocomplete are placed. If empty or not found, note creation is disabled (Joplin requires every note to belong to a notebook).
+
+## Installation
+
+- **Plugin repository**: `Tools -> Options -> Plugins`, find `Link It`, install and restart Joplin.
+- **Manual**: build the `.jpl` with `npm run dist` and install it via `Tools -> Options -> Plugins -> Install from file`.
 
 ## Development
 
