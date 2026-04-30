@@ -9,6 +9,14 @@ A [Joplin](https://joplinapp.org) plugin for fast inline note linking from the e
 - Creates a new note from the autocomplete when nothing matches.
 - Localization support.
 
+## Demo
+
+### Link existing notes
+![Link It demo](demo/link-it.gif)
+
+### Create new notes from autocomplete when no matches are found
+![Link It demo 2](demo/link-it-2.gif)
+
 ## Requirements
 
 - Joplin **3.5+** (CodeMirror 6 editor).
