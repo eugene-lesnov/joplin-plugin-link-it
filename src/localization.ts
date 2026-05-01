@@ -10,6 +10,19 @@ export interface AppLocalization {
 	createNoteDetailNotebook: string;
 	createNoteDetailUnconfigured: string;
 	createNoteDetailInvalid: string;
+	linksShowOutgoingLabel: string;
+	linksShowOutgoingDescription: string;
+	linksPanelTitle: string;
+	linksLoading: string;
+	linksNoNoteSelected: string;
+	linksError: string;
+	linksRefsLabel: string;
+	linksToggleLabel: string;
+	linksIncomingTitle: string;
+	linksOutgoingTitle: string;
+	linksIncomingEmpty: string;
+	linksOutgoingEmpty: string;
+	linksMissingSuffix: string;
 }
 
 const defaultStrings: AppLocalization = {
@@ -23,6 +36,20 @@ const defaultStrings: AppLocalization = {
 	createNoteDetailNotebook: ' in {path}',
 	createNoteDetailUnconfigured: 'Set the default notebook for new notes in Link It settings',
 	createNoteDetailInvalid: 'Notebook "{path}" not found',
+	linksShowOutgoingLabel: 'Show outgoing links',
+	linksShowOutgoingDescription:
+		'When enabled, the links panel also lists notes the current note links to.',
+	linksPanelTitle: 'Links',
+	linksLoading: 'Loading...',
+	linksNoNoteSelected: 'No note selected',
+	linksError: 'Failed to load links',
+	linksRefsLabel: '{count} refs',
+	linksToggleLabel: 'Toggle links panel',
+	linksIncomingTitle: 'Backlinks',
+	linksOutgoingTitle: 'Outgoing links',
+	linksIncomingEmpty: 'No backlinks',
+	linksOutgoingEmpty: 'No outgoing links',
+	linksMissingSuffix: '(not found)',
 };
 const strings: AppLocalization = { ...defaultStrings };
 
@@ -39,6 +66,20 @@ const localizations: Record<string, Partial<AppLocalization>> = {
 		createNoteDetailNotebook: ' в {path}',
 		createNoteDetailUnconfigured: 'Укажите блокнот по умолчанию для новых заметок в настройках Link It',
 		createNoteDetailInvalid: 'Блокнот "{path}" не найден',
+		linksShowOutgoingLabel: 'Показывать исходящие ссылки',
+		linksShowOutgoingDescription:
+			'Когда включено, панель ссылок также показывает заметки, на которые ссылается текущая заметка.',
+		linksPanelTitle: 'Ссылки заметки',
+		linksLoading: 'Загрузка...',
+		linksNoNoteSelected: 'Заметка не выбрана',
+		linksError: 'Не удалось загрузить ссылки',
+		linksRefsLabel: '{count} ссылок',
+		linksToggleLabel: 'Переключить панель ссылок',
+		linksIncomingTitle: 'Обратные ссылки',
+		linksOutgoingTitle: 'Исходящие ссылки',
+		linksIncomingEmpty: 'Обратных ссылок нет',
+		linksOutgoingEmpty: 'Исходящих ссылок нет',
+		linksMissingSuffix: '(не найдено)',
 	},
 };
 

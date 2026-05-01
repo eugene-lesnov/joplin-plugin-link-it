@@ -15,6 +15,8 @@ import {
 	getDefaultNotebookPath,
 	registerPluginSettings,
 } from './settings';
+import { LinksService } from './links/linksService';
+import { LinksPanel } from './links/linksPanel';
 
 const AUTOCOMPLETE_LIMIT = 20;
 // The page size when fetching notebooks in batch. 100 is the maximum that the Joplin Data API supports.
@@ -221,13 +223,29 @@ joplin.plugins.register({
 
 		await registerPluginSettings();
 
+		const linksService = new LinksService(notebookPathResolver);
+		const linksPanel = new LinksPanel(linksService);
+		await linksPanel.register();
+
+		await joplin.workspace.onNoteSelectionChange(async event => {
+			const noteId = event.value && event.value.length ? event.value[0] : null;
+			await linksPanel.setCurrentNote(noteId);
+		});
+
+		const initialNote = await joplin.workspace.selectedNote();
+		await linksPanel.setCurrentNote(initialNote ? initialNote.id : null);
+
 		await joplin.workspace.onNoteChange(() => {
 			notebookPathResolver.invalidate();
 			notebookPathResolver.preload();
+			linksService.invalidateAll();
+			void linksPanel.refreshCurrent();
 		});
 		await joplin.workspace.onSyncComplete(() => {
 			notebookPathResolver.invalidate();
 			notebookPathResolver.preload();
+			linksService.invalidateAll();
+			void linksPanel.refreshCurrent();
 		});
 
 		await joplin.contentScripts.register(

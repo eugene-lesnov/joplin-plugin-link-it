@@ -4,6 +4,7 @@ import strings, { setLocale } from './localization';
 
 export const SETTINGS_SECTION = 'linkIt';
 export const SETTING_DEFAULT_NOTEBOOK_PATH = 'linkIt.defaultNewNoteNotebookPath';
+export const SETTING_LINKS_SHOW_OUTGOING = 'linkIt.links.showOutgoing';
 
 const LOCALE_GLOBAL_KEY = 'locale';
 
@@ -31,10 +32,23 @@ export async function registerPluginSettings(): Promise<void> {
 			label: strings.notebookPathLabel,
 			description: strings.notebookPathDescription,
 		},
+		[SETTING_LINKS_SHOW_OUTGOING]: {
+			value: true,
+			type: SettingItemType.Bool,
+			section: SETTINGS_SECTION,
+			public: true,
+			label: strings.linksShowOutgoingLabel,
+			description: strings.linksShowOutgoingDescription,
+		},
 	});
 }
 
 export async function getDefaultNotebookPath(): Promise<string> {
 	const raw = await joplin.settings.value(SETTING_DEFAULT_NOTEBOOK_PATH);
 	return typeof raw === 'string' ? raw.trim() : '';
+}
+
+export async function getShowOutgoingLinks(): Promise<boolean> {
+	const raw = await joplin.settings.value(SETTING_LINKS_SHOW_OUTGOING);
+	return typeof raw === 'boolean' ? raw : true;
 }
