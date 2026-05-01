@@ -15,6 +15,13 @@ import { LinksService } from './linksService';
 import strings from '../localization';
 import { getShowOutgoingLinks } from '../settings';
 
+const PANEL_HTML = `
+	<div class="link-it-links" data-link-it-links>
+		<div class="link-it-links__header"></div>
+		<div class="link-it-links__body"></div>
+	</div>
+`;
+
 export class LinksPanel {
 	private handle: string | null = null;
 	private currentNoteId: string | null = null;
@@ -62,12 +69,12 @@ export class LinksPanel {
 		if (!this.handle || !this.webviewReady) return;
 
 		if (!this.currentNoteId) {
-			await this.postUpdate('no-note', [], []);
+			await this.postUpdate('no-note', [], [], false);
 			return;
 		}
 
 		const seq = ++this.requestSeq;
-		await this.postUpdate('loading', [], []);
+		await this.postUpdate('loading', [], [], false);
 
 		try {
 			const showOutgoing = await getShowOutgoingLinks();
@@ -79,11 +86,11 @@ export class LinksPanel {
 			]);
 
 			if (seq !== this.requestSeq) return;
-			await this.postUpdate('ready', incoming, outgoing);
+			await this.postUpdate('ready', incoming, outgoing, showOutgoing);
 		} catch (err) {
 			console.warn('[Link It] failed to load links:', err);
 			if (seq !== this.requestSeq) return;
-			await this.postUpdate('error', [], []);
+			await this.postUpdate('error', [], [], false);
 		}
 	}
 
@@ -106,9 +113,8 @@ export class LinksPanel {
 		});
 	}
 
-	private async postUpdate(state: LinksState, incoming: NoteLink[], outgoing: NoteLink[]): Promise<void> {
+	private async postUpdate(state: LinksState, incoming: NoteLink[], outgoing: NoteLink[], showOutgoing: boolean): Promise<void> {
 		if (!this.handle) return;
-		const showOutgoing = await getShowOutgoingLinks();
 		joplin.views.panels.postMessage(this.handle, {
 			type: MSG_LINKS_UPDATE,
 			state,
@@ -119,12 +125,7 @@ export class LinksPanel {
 	}
 
 	private renderHtml(): string {
-		return `
-			<div class="link-it-links" data-link-it-links>
-				<div class="link-it-links__header"></div>
-				<div class="link-it-links__body"></div>
-			</div>
-		`;
+		return PANEL_HTML;
 	}
 
 	private async registerToggleCommand(): Promise<void> {

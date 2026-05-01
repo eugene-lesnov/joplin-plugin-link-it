@@ -235,18 +235,14 @@ joplin.plugins.register({
 		const initialNote = await joplin.workspace.selectedNote();
 		await linksPanel.setCurrentNote(initialNote ? initialNote.id : null);
 
-		await joplin.workspace.onNoteChange(() => {
+		const invalidateAndRefresh = () => {
 			notebookPathResolver.invalidate();
 			notebookPathResolver.preload();
 			linksService.invalidateAll();
 			void linksPanel.refreshCurrent();
-		});
-		await joplin.workspace.onSyncComplete(() => {
-			notebookPathResolver.invalidate();
-			notebookPathResolver.preload();
-			linksService.invalidateAll();
-			void linksPanel.refreshCurrent();
-		});
+		};
+		await joplin.workspace.onNoteChange(invalidateAndRefresh);
+		await joplin.workspace.onSyncComplete(invalidateAndRefresh);
 
 		await joplin.contentScripts.register(
 			ContentScriptType.CodeMirrorPlugin,

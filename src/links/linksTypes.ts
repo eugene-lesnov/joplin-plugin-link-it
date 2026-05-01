@@ -52,8 +52,6 @@ export interface LinksUpdatePayload {
 	showOutgoing: boolean;
 }
 
-export type LinksOutgoing = LinksInitPayload | LinksUpdatePayload;
-
 export interface LinksOpenRequest {
 	type: typeof MSG_LINKS_OPEN;
 	noteId: string;

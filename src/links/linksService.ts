@@ -92,11 +92,9 @@ export class LinksService {
 			const body = note.body ?? '';
 			linkRegex.lastIndex = 0;
 
-			let match: RegExpExecArray | null;
 			let refsCount = 0;
-			while ((match = linkRegex.exec(body)) !== null) {
+			while (linkRegex.exec(body) !== null) {
 				refsCount++;
-				if (match.index === linkRegex.lastIndex) linkRegex.lastIndex++;
 			}
 
 			if (refsCount === 0) continue;
@@ -146,11 +144,7 @@ export class LinksService {
 		await this.notebookPaths.ensureLoaded();
 
 		// Group occurrences by target id; remember first display text for missing-link fallback title.
-		interface Occurrence {
-			displayText: string;
-			refsCount: number;
-		}
-		const occurrences = new Map<string, Occurrence>();
+		const occurrences = new Map<string, { displayText: string; refsCount: number }>();
 		const body = source.body ?? '';
 
 		ANY_NOTE_LINK_REGEX.lastIndex = 0;
@@ -168,7 +162,6 @@ export class LinksService {
 					refsCount: 1,
 				});
 			}
-			if (match.index === ANY_NOTE_LINK_REGEX.lastIndex) ANY_NOTE_LINK_REGEX.lastIndex++;
 		}
 
 		// Resolve targets in parallel - Joplin data API is local SQLite, parallelism is safe and cheap.
