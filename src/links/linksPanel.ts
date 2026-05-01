@@ -62,6 +62,10 @@ export class LinksPanel {
 
 	public async setCurrentNote(noteId: string | null): Promise<void> {
 		this.currentNoteId = noteId;
+		// Drop stale cache for the freshly selected note: while the user was on another note,
+		// some of its linked targets could have been deleted without onNoteChange firing for them
+		// (Joplin only forwards onNoteChange events for the currently selected note).
+		if (noteId) this.service.invalidateNote(noteId);
 		await this.refreshCurrent();
 	}
 

@@ -52,6 +52,15 @@ export class LinksService {
 		this.outgoingCache.clear();
 	}
 
+	// Drops cached data for a single note. Used when the user navigates to a note,
+	// so that stale entries (e.g. links to notes deleted while another note was open)
+	// do not survive past selection change.
+	public invalidateNote(noteId: string): void {
+		if (!noteId) return;
+		this.incomingCache.delete(noteId);
+		this.outgoingCache.delete(noteId);
+	}
+
 	public async getIncoming(targetNoteId: string): Promise<NoteLink[]> {
 		if (!targetNoteId) return [];
 		return this.withCache(this.incomingCache, targetNoteId, () => this.fetchIncoming(targetNoteId));
