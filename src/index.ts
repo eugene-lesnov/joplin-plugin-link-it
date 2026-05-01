@@ -19,10 +19,24 @@ import { LinksService } from './links/linksService';
 import { LinksPanel } from './links/linksPanel';
 
 const AUTOCOMPLETE_LIMIT = 20;
+// Pool size for the recent-notes fallback used to compensate FTS indexing lag for freshly created notes.
+const RECENT_NOTES_FALLBACK_LIMIT = 50;
 // The page size when fetching notebooks in batch. 100 is the maximum that the Joplin Data API supports.
 const NOTEBOOKS_PAGE_LIMIT = 100;
 const MAX_NOTEBOOK_PAGES = 100;
 const NOTEBOOK_PATH_SEPARATOR = '/';
+
+type RawNote = { id: string; title: string; parent_id?: string };
+
+async function fetchRecentNotes(limit: number): Promise<RawNote[]> {
+	const recent = await joplin.data.get(['notes'], {
+		fields: ['id', 'title', 'parent_id'],
+		order_by: 'updated_time',
+		order_dir: 'DESC',
+		limit,
+	});
+	return recent?.items ?? [];
+}
 
 interface NotebookInfo {
 	title: string;
@@ -130,23 +144,35 @@ async function searchNotesByTitle(
 	prefix: string,
 ): Promise<SearchNotesResponse> {
 	const trimmed = prefix.trim();
-	let items: { id: string; title: string; parent_id?: string }[];
+	let items: RawNote[];
 	if (!trimmed) {
-		const recent = await joplin.data.get(['notes'], {
-			fields: ['id', 'title', 'parent_id'],
-			order_by: 'updated_time',
-			order_dir: 'DESC',
-			limit: AUTOCOMPLETE_LIMIT,
-		});
-		items = recent?.items ?? [];
+		items = await fetchRecentNotes(AUTOCOMPLETE_LIMIT);
 	} else {
-		const result = await joplin.data.get(['search'], {
-			query: `title:${trimmed}*`,
-			fields: ['id', 'title', 'parent_id'],
-			limit: AUTOCOMPLETE_LIMIT,
-			type: 'note',
-		});
-		items = result?.items ?? [];
+		// Joplin FTS index lags behind note creation for several seconds, so freshly created notes
+		// are invisible to ['search']. We compensate by also pulling the recent notes pool and
+		// filtering it locally by title prefix; matches from this pool are placed on top so that
+		// the just-created note is reachable immediately.
+		const lowerPrefix = trimmed.toLowerCase();
+		const [ftsResult, recentItems] = await Promise.all([
+			joplin.data.get(['search'], {
+				query: `title:${trimmed}*`,
+				fields: ['id', 'title', 'parent_id'],
+				limit: AUTOCOMPLETE_LIMIT,
+				type: 'note',
+			}),
+			fetchRecentNotes(RECENT_NOTES_FALLBACK_LIMIT),
+		]);
+		const ftsItems: RawNote[] = ftsResult?.items ?? [];
+		const recentMatches = recentItems.filter(n => (n.title ?? '').toLowerCase().startsWith(lowerPrefix));
+
+		const seen = new Set<string>();
+		items = [];
+		for (const n of [...recentMatches, ...ftsItems]) {
+			if (seen.has(n.id)) continue;
+			seen.add(n.id);
+			items.push(n);
+			if (items.length >= AUTOCOMPLETE_LIMIT) break;
+		}
 	}
 
 	const notes: NoteOption[] = items.map(note => ({
