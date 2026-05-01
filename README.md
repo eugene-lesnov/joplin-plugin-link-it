@@ -1,4 +1,4 @@
-# `joplin-plugin-link-it`
+о# `joplin-plugin-link-it`
 
 A [Joplin](https://joplinapp.org) plugin for fast inline note linking from the editor.
 
@@ -7,6 +7,7 @@ A [Joplin](https://joplinapp.org) plugin for fast inline note linking from the e
 - `[[` triggers an autocomplete with title-prefix search and notebook path preview.
 - Inserts a note link in the form `[Title](:/<id>)`.
 - Creates a new note from the autocomplete when nothing matches.
+- Links panel for the current note: shows backlinks (notes linking to this note) and, optionally, outgoing links (notes the current note links to). Missing targets are marked as deleted.
 - Localization support.
 
 ## Demo
@@ -28,6 +29,7 @@ Type `[[` and start typing a note title. Pick an entry from the list to insert t
 ## Settings
 
 - **Default notebook for new notes**: path (e.g. `Inbox` or `Projects/Active`) where notes created from the autocomplete are placed. If empty or not found, note creation is disabled (Joplin requires every note to belong to a notebook).
+- **Show outgoing links**: when enabled, the links panel also lists notes the current note links to in addition to backlinks.
 
 ## Installation
 
