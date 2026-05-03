@@ -1,4 +1,4 @@
-о# `joplin-plugin-link-it`
+# `joplin-plugin-link-it`
 
 A [Joplin](https://joplinapp.org) plugin for fast inline note linking from the editor.
 
