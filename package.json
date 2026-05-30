@@ -1,6 +1,6 @@
 {
   "name": "joplin-plugin-link-it",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Inline note search on '[[': with autocomplete",
   "author": "Eugene Lesnov",
   "scripts": {
