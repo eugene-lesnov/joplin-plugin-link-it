@@ -49,7 +49,6 @@ export interface LinksUpdatePayload {
 	state: LinksState;
 	incoming: NoteLink[];
 	outgoing: NoteLink[];
-	showOutgoing: boolean;
 }
 
 export interface LinksOpenRequest {

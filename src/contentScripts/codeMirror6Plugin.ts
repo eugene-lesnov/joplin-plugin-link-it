@@ -5,6 +5,7 @@ import {
 	MSG_CREATE_NOTE,
 	MSG_SEARCH_NOTES,
 	SearchNotesResponse,
+	createMarkdownNoteLink,
 } from '../noteLink';
 
 const MAX_VISIBLE_PATH_SEGMENTS = 3;
@@ -35,7 +36,7 @@ export default (context: ContentScriptContext) => {
 
 			const insertLink = (view: any, from: number, to: number, title: string, id: string) => {
 				const range = expandBracketsRange(view.state, from, to);
-				const replacement = `[${title}](:/${id})`;
+				const replacement = createMarkdownNoteLink(title, id);
 				view.dispatch({
 					changes: { from: range.from, to: range.to, insert: replacement },
 					selection: { anchor: range.from + replacement.length },

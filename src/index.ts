@@ -5,6 +5,7 @@ import {
 	CreateOption,
 	CreateOptionStatus,
 	EDITOR_CONTENT_SCRIPT_ID,
+	createMarkdownNoteLink,
 	MSG_CREATE_NOTE,
 	MSG_SEARCH_NOTES,
 	NoteOption,
@@ -12,6 +13,7 @@ import {
 } from './noteLink';
 import strings, { formatLocalizedString } from './localization';
 import {
+	SETTING_LINKS_SHOW,
 	getDefaultNotebookPath,
 	registerPluginSettings,
 } from './settings';
@@ -25,6 +27,21 @@ const RECENT_NOTES_FALLBACK_LIMIT = 50;
 const NOTEBOOKS_PAGE_LIMIT = 100;
 const MAX_NOTEBOOK_PAGES = 100;
 const NOTEBOOK_PATH_SEPARATOR = '/';
+const INSERT_NOTE_LINK_COMMAND = 'linkIt.insertNoteLink';
+const INSERT_NOTE_LINK_DIALOG = 'linkIt.insertNoteLinkDialog';
+const DIALOG_BUTTON_SELECT = 'select';
+const DIALOG_BUTTON_CANCEL = 'cancel';
+const DIALOG_FIELD_QUERY = 'query';
+const DIALOG_FIELD_NOTE_ID = 'noteId';
+const DIALOG_CREATE_NOTE_PREFIX = 'create:';
+const EMPTY_QUERY = '';
+const MAX_DIALOG_PATH_LENGTH = 80;
+
+interface InsertNoteLinkChoice {
+	id: string;
+	title: string;
+	createTitle?: string;
+}
 
 type RawNote = { id: string; title: string; parent_id?: string };
 
@@ -241,6 +258,132 @@ async function createNote(
 	};
 }
 
+function escapeHtml(value: string): string {
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+}
+
+function truncateDialogPath(path: string): string {
+	if (path.length <= MAX_DIALOG_PATH_LENGTH) return path;
+	return `${path.slice(0, MAX_DIALOG_PATH_LENGTH - 3)}...`;
+}
+
+function createChoiceLabel(note: NoteOption): string {
+	if (!note.notebookPath) return note.title;
+	return `${note.title} - ${truncateDialogPath(note.notebookPath)}`;
+}
+
+function parseDialogFormValue(value: unknown): string {
+	if (Array.isArray(value)) return String(value[0] ?? '').trim();
+	return String(value ?? '').trim();
+}
+
+async function getSelectedEditorText(): Promise<string> {
+	try {
+		const selected = await joplin.commands.execute('editor.execCommand', {
+			name: 'getSelectedText',
+			args: [],
+		});
+		return typeof selected === 'string' ? selected.trim() : EMPTY_QUERY;
+	} catch (err) {
+		console.warn('[Link It] failed to read selected text:', err);
+		return EMPTY_QUERY;
+	}
+}
+
+async function insertEditorText(text: string): Promise<void> {
+	await joplin.commands.execute('editor.execCommand', {
+		name: 'insertText',
+		args: [text],
+		value: text,
+	});
+}
+
+async function resolveInsertNoteLinkChoice(
+	notebookPathResolver: NotebookPathResolver,
+	query: string,
+): Promise<InsertNoteLinkChoice | null> {
+	let currentQuery = query.trim();
+	const dialog = await joplin.views.dialogs.create(INSERT_NOTE_LINK_DIALOG);
+	await joplin.views.dialogs.setButtons(dialog, [
+		{ id: DIALOG_BUTTON_SELECT, title: strings.insertNoteLinkCommandLabel },
+		{ id: DIALOG_BUTTON_CANCEL, title: strings.cancelButtonLabel },
+	]);
+
+	while (true) {
+		const response = await searchNotesByTitle(notebookPathResolver, currentQuery);
+		const createValue = response.createOption?.status === 'ready'
+			? `${DIALOG_CREATE_NOTE_PREFIX}${currentQuery}`
+			: '';
+		const optionsHtml = response.notes
+			.map(note => `<option value="${escapeHtml(note.id)}">${escapeHtml(createChoiceLabel(note))}</option>`)
+			.join('');
+		const createOptionHtml = createValue
+			? `<option value="${escapeHtml(createValue)}">${escapeHtml(response.createOption!.label + response.createOption!.detail)}</option>`
+			: '';
+		const statusText = response.notes.length || createOptionHtml
+			? ''
+			: (response.createOption ? strings.insertNoteLinkCreateUnavailable : strings.insertNoteLinkNoResults);
+
+		await joplin.views.dialogs.setHtml(dialog, `
+			<form name="linkItInsertNoteLink">
+				<h3>${escapeHtml(strings.insertNoteLinkDialogTitle)}</h3>
+				<label for="${DIALOG_FIELD_QUERY}">${escapeHtml(strings.insertNoteLinkQueryLabel)}</label>
+				<input id="${DIALOG_FIELD_QUERY}" name="${DIALOG_FIELD_QUERY}" value="${escapeHtml(currentQuery)}" placeholder="${escapeHtml(strings.insertNoteLinkQueryPlaceholder)}" autofocus />
+				<label for="${DIALOG_FIELD_NOTE_ID}">${escapeHtml(strings.insertNoteLinkResultLabel)}</label>
+				<select id="${DIALOG_FIELD_NOTE_ID}" name="${DIALOG_FIELD_NOTE_ID}">
+					<option value="">${escapeHtml(strings.insertNoteLinkResultPlaceholder)}</option>
+					${optionsHtml}${createOptionHtml}
+				</select>
+				<p>${escapeHtml(statusText)}</p>
+			</form>
+		`);
+
+		const result = await joplin.views.dialogs.open(dialog);
+		if (result.id !== DIALOG_BUTTON_SELECT) return null;
+
+		const formData = result.formData?.linkItInsertNoteLink ?? {};
+		const selectedId = parseDialogFormValue(formData[DIALOG_FIELD_NOTE_ID]);
+		const nextQuery = parseDialogFormValue(formData[DIALOG_FIELD_QUERY]);
+		if (!selectedId && nextQuery !== currentQuery) {
+			currentQuery = nextQuery;
+			continue;
+		}
+
+		if (selectedId.startsWith(DIALOG_CREATE_NOTE_PREFIX)) {
+			return {
+				id: selectedId,
+				title: response.createOption?.label ?? nextQuery,
+				createTitle: selectedId.substring(DIALOG_CREATE_NOTE_PREFIX.length),
+			};
+		}
+
+		const note = response.notes.find(item => item.id === selectedId);
+		if (note) return { id: note.id, title: note.title };
+
+		currentQuery = nextQuery;
+	}
+}
+
+async function insertNoteLinkCommand(notebookPathResolver: NotebookPathResolver): Promise<void> {
+	const selectedText = await getSelectedEditorText();
+	const choice = await resolveInsertNoteLinkChoice(notebookPathResolver, selectedText);
+	if (!choice) return;
+
+	if (choice.createTitle) {
+		const created = await createNote(notebookPathResolver, choice.createTitle);
+		if (!created.created || !created.id || !created.title) return;
+		await insertEditorText(createMarkdownNoteLink(created.title, created.id));
+		return;
+	}
+
+	await insertEditorText(createMarkdownNoteLink(choice.title, choice.id));
+}
+
 
 joplin.plugins.register({
 	onStart: async () => {
@@ -259,6 +402,7 @@ joplin.plugins.register({
 		});
 
 		const initialNote = await joplin.workspace.selectedNote();
+		await linksPanel.syncVisibility();
 		await linksPanel.setCurrentNote(initialNote ? initialNote.id : null);
 
 		const invalidateAndRefresh = () => {
@@ -269,6 +413,22 @@ joplin.plugins.register({
 		};
 		await joplin.workspace.onNoteChange(invalidateAndRefresh);
 		await joplin.workspace.onSyncComplete(invalidateAndRefresh);
+
+		await joplin.settings.onChange(async event => {
+			if (event.keys.includes(SETTING_LINKS_SHOW)) {
+				const visible = await linksPanel.syncVisibility();
+				if (visible) await linksPanel.refreshCurrent();
+			}
+		});
+
+		await joplin.commands.register({
+			name: INSERT_NOTE_LINK_COMMAND,
+			label: strings.insertNoteLinkCommandLabel,
+			iconName: 'fas fa-link',
+			execute: async () => {
+				await insertNoteLinkCommand(notebookPathResolver);
+			},
+		});
 
 		await joplin.contentScripts.register(
 			ContentScriptType.CodeMirrorPlugin,

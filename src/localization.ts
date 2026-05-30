@@ -10,8 +10,17 @@ export interface AppLocalization {
 	createNoteDetailNotebook: string;
 	createNoteDetailUnconfigured: string;
 	createNoteDetailInvalid: string;
-	linksShowOutgoingLabel: string;
-	linksShowOutgoingDescription: string;
+	insertNoteLinkCommandLabel: string;
+	insertNoteLinkDialogTitle: string;
+	insertNoteLinkQueryLabel: string;
+	insertNoteLinkQueryPlaceholder: string;
+	insertNoteLinkResultLabel: string;
+	insertNoteLinkResultPlaceholder: string;
+	insertNoteLinkNoResults: string;
+	insertNoteLinkCreateUnavailable: string;
+	cancelButtonLabel: string;
+	linksShowLabel: string;
+	linksShowDescription: string;
 	linksPanelTitle: string;
 	linksLoading: string;
 	linksNoNoteSelected: string;
@@ -36,9 +45,18 @@ const defaultStrings: AppLocalization = {
 	createNoteDetailNotebook: ' in {path}',
 	createNoteDetailUnconfigured: 'Set the default notebook for new notes in Link It settings',
 	createNoteDetailInvalid: 'Notebook "{path}" not found',
-	linksShowOutgoingLabel: 'Show outgoing links',
-	linksShowOutgoingDescription:
-		'When enabled, the links panel also lists notes the current note links to.',
+	insertNoteLinkCommandLabel: 'Insert note link',
+	insertNoteLinkDialogTitle: 'Insert note link',
+	insertNoteLinkQueryLabel: 'Search text',
+	insertNoteLinkQueryPlaceholder: 'Type a note title',
+	insertNoteLinkResultLabel: 'Note',
+	insertNoteLinkResultPlaceholder: 'Choose a note',
+	insertNoteLinkNoResults: 'No matching notes',
+	insertNoteLinkCreateUnavailable: 'Note creation is unavailable',
+	cancelButtonLabel: 'Cancel',
+	linksShowLabel: 'Show note links',
+	linksShowDescription:
+		'When enabled, the links panel shows incoming and outgoing links for the current note.',
 	linksPanelTitle: 'Links',
 	linksLoading: 'Loading...',
 	linksNoNoteSelected: 'No note selected',
@@ -66,9 +84,18 @@ const localizations: Record<string, Partial<AppLocalization>> = {
 		createNoteDetailNotebook: ' в {path}',
 		createNoteDetailUnconfigured: 'Укажите блокнот по умолчанию для новых заметок в настройках Link It',
 		createNoteDetailInvalid: 'Блокнот "{path}" не найден',
-		linksShowOutgoingLabel: 'Показывать исходящие ссылки',
-		linksShowOutgoingDescription:
-			'Когда включено, панель ссылок также показывает заметки, на которые ссылается текущая заметка.',
+		insertNoteLinkCommandLabel: 'Вставить ссылку на заметку',
+		insertNoteLinkDialogTitle: 'Вставка ссылки на заметку',
+		insertNoteLinkQueryLabel: 'Текст поиска',
+		insertNoteLinkQueryPlaceholder: 'Введите название заметки',
+		insertNoteLinkResultLabel: 'Заметка',
+		insertNoteLinkResultPlaceholder: 'Выберите заметку',
+		insertNoteLinkNoResults: 'Подходящих заметок нет',
+		insertNoteLinkCreateUnavailable: 'Создание заметки недоступно',
+		cancelButtonLabel: 'Отмена',
+		linksShowLabel: 'Показывать ссылки заметки',
+		linksShowDescription:
+			'Когда включено, панель показывает входящие и исходящие ссылки текущей заметки.',
 		linksPanelTitle: 'Ссылки заметки',
 		linksLoading: 'Загрузка...',
 		linksNoNoteSelected: 'Заметка не выбрана',

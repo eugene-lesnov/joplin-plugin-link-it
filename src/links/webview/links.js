@@ -84,7 +84,7 @@
 		return '<section class="link-it-links__section">' + titleHtml + bodyHtml + '</section>';
 	}
 
-	function renderBody(state, incoming, outgoing, showOutgoing) {
+	function renderBody(state, incoming, outgoing) {
 		switch (state) {
 			case 'loading':
 				return renderEmptyState(strings.loading);
@@ -92,23 +92,18 @@
 				return renderEmptyState(strings.noNote);
 			case 'error':
 				return renderEmptyState(strings.error);
-			case 'ready': {
-				const incomingHtml = renderSection(
+			case 'ready':
+				return renderSection(
 					strings.incomingTitle, incoming.length, incoming, strings.incomingEmpty,
+				) + renderSection(
+					strings.outgoingTitle, outgoing.length, outgoing, strings.outgoingEmpty,
 				);
-				const outgoingHtml = showOutgoing
-					? renderSection(
-						strings.outgoingTitle, outgoing.length, outgoing, strings.outgoingEmpty,
-					)
-					: '';
-				return incomingHtml + outgoingHtml;
-			}
 			default:
 				return '';
 		}
 	}
 
-	function update(state, incoming, outgoing, showOutgoing) {
+	function update(state, incoming, outgoing) {
 		const root = document.querySelector(ROOT_SELECTOR);
 		if (!root) return;
 
@@ -116,11 +111,11 @@
 		const body = root.querySelector('.link-it-links__body');
 
 		const totalCount = state === 'ready'
-			? incoming.length + (showOutgoing ? outgoing.length : 0)
+			? incoming.length + outgoing.length
 			: 0;
 
 		if (header) header.innerHTML = renderHeader(totalCount);
-		if (body) body.innerHTML = renderBody(state, incoming, outgoing, showOutgoing);
+		if (body) body.innerHTML = renderBody(state, incoming, outgoing);
 	}
 
 	function bindClicks() {
@@ -155,7 +150,6 @@
 					message.state,
 					message.incoming || [],
 					message.outgoing || [],
-					!!message.showOutgoing,
 				);
 			}
 		});

@@ -13,7 +13,7 @@ import {
 } from './linksTypes';
 import { LinksService } from './linksService';
 import strings from '../localization';
-import { getShowOutgoingLinks } from '../settings';
+import { getShowNoteLinks } from '../settings';
 
 const PANEL_HTML = `
 	<div class="link-it-links" data-link-it-links>
@@ -69,32 +69,47 @@ export class LinksPanel {
 		await this.refreshCurrent();
 	}
 
+	public async syncVisibility(): Promise<boolean> {
+		if (!this.handle) return false;
+		const showLinks = await getShowNoteLinks();
+		if (showLinks) {
+			await joplin.views.panels.show(this.handle);
+		} else {
+			await joplin.views.panels.hide(this.handle);
+		}
+		return showLinks;
+	}
+
 	public async refreshCurrent(): Promise<void> {
 		if (!this.handle || !this.webviewReady) return;
 
+		if (!await getShowNoteLinks()) {
+			await joplin.views.panels.hide(this.handle);
+			return;
+		}
+
 		if (!this.currentNoteId) {
-			await this.postUpdate('no-note', [], [], false);
+			await this.postUpdate('no-note', [], []);
 			return;
 		}
 
 		const seq = ++this.requestSeq;
-		await this.postUpdate('loading', [], [], false);
 
 		try {
-			const showOutgoing = await getShowOutgoingLinks();
-			const noteId = this.currentNoteId;
+			await this.postUpdate('loading', [], []);
 
+			const noteId = this.currentNoteId;
 			const [incoming, outgoing] = await Promise.all([
 				this.service.getIncoming(noteId),
-				showOutgoing ? this.service.getOutgoing(noteId) : Promise.resolve([] as NoteLink[]),
+				this.service.getOutgoing(noteId),
 			]);
 
 			if (seq !== this.requestSeq) return;
-			await this.postUpdate('ready', incoming, outgoing, showOutgoing);
+			await this.postUpdate('ready', incoming, outgoing);
 		} catch (err) {
 			console.warn('[Link It] failed to load links:', err);
 			if (seq !== this.requestSeq) return;
-			await this.postUpdate('error', [], [], false);
+			await this.postUpdate('error', [], []);
 		}
 	}
 
@@ -117,14 +132,17 @@ export class LinksPanel {
 		});
 	}
 
-	private async postUpdate(state: LinksState, incoming: NoteLink[], outgoing: NoteLink[], showOutgoing: boolean): Promise<void> {
+	private async postUpdate(
+		state: LinksState,
+		incoming: NoteLink[],
+		outgoing: NoteLink[],
+	): Promise<void> {
 		if (!this.handle) return;
 		joplin.views.panels.postMessage(this.handle, {
 			type: MSG_LINKS_UPDATE,
 			state,
 			incoming,
 			outgoing,
-			showOutgoing,
 		});
 	}
 
@@ -141,6 +159,7 @@ export class LinksPanel {
 			label: strings.linksToggleLabel,
 			iconName: 'fas fa-exchange-alt',
 			execute: async () => {
+				if (!await getShowNoteLinks()) return;
 				const visible = await joplin.views.panels.visible(handle);
 				if (visible) {
 					await joplin.views.panels.hide(handle);
